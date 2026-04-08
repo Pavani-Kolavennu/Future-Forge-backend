@@ -24,26 +24,32 @@ public class JwtService {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
+    
     public String generateToken(User user) {
         return Jwts.builder()
-                .setSubject(user.getEmail())   // ✅ FIXED
-                .claim("role", user.getRole().name())  // ✅ FIXED
-                .claim("userId", user.getId())  // ✅ FIXED
+                .setSubject(user.email)
+                .claim("role", user.role.name())
+                .claim("userId", user.id)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 86400000))
+                .setExpiration(new Date(System.currentTimeMillis() + 86400000)) // 1 day
                 .signWith(getSigningKey())
                 .compact();
     }
 
+   
     public boolean isTokenValid(String token) {
         try {
-            extractAllClaims(token);
-            return true;
+            Claims claims = extractAllClaims(token);
+
+            
+            return claims.getExpiration().after(new Date());
+
         } catch (Exception e) {
             return false;
         }
     }
 
+   
     public Optional<String> extractEmail(String token) {
         try {
             return Optional.ofNullable(extractAllClaims(token).getSubject());
@@ -52,6 +58,7 @@ public class JwtService {
         }
     }
 
+   
     private Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())

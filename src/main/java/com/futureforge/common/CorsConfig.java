@@ -8,16 +8,16 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class CorsConfig implements WebMvcConfigurer {
 
-    @Value("${app.cors.allowed-origins:http://localhost:5173,http://127.0.0.1:5173,https://future-forge.vercel.app}")
-    private String[] allowedOrigins;
+	@Value("${app.cors.allowed-origins:http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173}")
+	private String[] allowedOrigins;
 
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedOriginPatterns(allowedOrigins)  // better than allowedOrigins
-                .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-                .allowedHeaders("*")
-                .exposedHeaders("Authorization")
-                .allowCredentials(true);
-    }
+	@Override
+	public void addCorsMappings(CorsRegistry registry) {
+		registry.addMapping("/**")
+				.allowedOrigins(allowedOrigins)
+				.allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+				.allowedHeaders("*")
+				.exposedHeaders("Authorization")
+				.allowCredentials(true);
+	}
 }

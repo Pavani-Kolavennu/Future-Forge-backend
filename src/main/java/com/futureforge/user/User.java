@@ -1,67 +1,70 @@
 package com.futureforge.user;
 
 import java.time.Instant;
-import jakarta.persistence.*;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "users")
 public class User {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	public Long id;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Column(nullable = false)
+	public String fullName;
 
-    @Column(nullable = false)
-    private String fullName;
+	@Column(nullable = false, unique = true)
+	public String email;
 
-    @Column(nullable = false, unique = true)
-    private String email;
+	@Column(nullable = false)
+	public String password;
 
-    @Column(nullable = false)
-    private String password;
+	@Column
+	public String phone;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Role role = Role.CANDIDATE;
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
+	public Role role = Role.CANDIDATE;
 
-    @Column(nullable = false)
-    private boolean enabled = true;
+	@Column(nullable = false)
+	public boolean enabled = true;
 
-    @Column(nullable = false, updatable = false)
-    private Instant createdAt;
+	@Column(nullable = false, updatable = false)
+	public Instant createdAt;
 
-    @Column(nullable = false)
-    private Instant updatedAt;
+	@Column(nullable = false)
+	public Instant updatedAt;
 
-    public User() {}
+	public User() {
+	}
 
-    public User(String fullName, String email, String password, Role role) {
-        this.fullName = fullName;
-        this.email = email;
-        this.password = password;
-        this.role = role == null ? Role.CANDIDATE : role;
-    }
+	public User(String fullName, String email, String password, String phone, Role role) {
+		this.fullName = fullName;
+		this.email = email;
+		this.password = password;
+		this.phone = phone;
+		this.role = role == null ? Role.CANDIDATE : role;
+	}
 
-    @PrePersist
-    public void onCreate() {
-        Instant now = Instant.now();
-        this.createdAt = now;
-        this.updatedAt = now;
-    }
+	@PrePersist
+	public void onCreate() {
+		Instant now = Instant.now();
+		this.createdAt = now;
+		this.updatedAt = now;
+	}
 
-    @PreUpdate
-    public void onUpdate() {
-        this.updatedAt = Instant.now();
-    }
-
-  
-    public Long getId() { return id; }
-    public String getFullName() { return fullName; }
-    public String getEmail() { return email; }
-    public String getPassword() { return password; }
-    public Role getRole() { return role; }
-    public boolean isEnabled() { return enabled; }
-
-    public void setFullName(String fullName) { this.fullName = fullName; }
-    public void setPassword(String password) { this.password = password; }
+	@PreUpdate
+	public void onUpdate() {
+		this.updatedAt = Instant.now();
+	}
 }

@@ -21,8 +21,6 @@ public class Assessment {
 	@Column(nullable = false)
 	public String title;
 
-	@Column(length = 4000)
-	public String description;
 
 	public Integer durationMinutes;
 

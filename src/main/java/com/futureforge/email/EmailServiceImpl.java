@@ -20,7 +20,7 @@ public class EmailServiceImpl implements EmailService {
             SimpleMailMessage message = new SimpleMailMessage();
 
             message.setTo(to);
-            message.setFrom("spoorthipaduchuri@gmail.com");
+            message.setFrom("pavanikolavennu16@gmail.com");
             message.setSubject("OTP Verification");
             message.setText("Your OTP is: " + otp);
 
@@ -30,7 +30,7 @@ public class EmailServiceImpl implements EmailService {
 
         } catch (Exception e) {
             System.out.println("EMAIL FAILED ❌");
-            e.printStackTrace(); // 🔥 THIS IS KEY
+            e.printStackTrace(); 
             throw new RuntimeException("Email sending failed");
         }
     }

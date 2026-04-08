@@ -19,37 +19,41 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "test_assignments")
 public class TestAssignment {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	public Long id;
 
-    @Column(name = "student_id", nullable = false)
-    public String studentId;
+	@Column(nullable = false)
+	public String studentId;
 
-    @Column(name = "assessment_id", nullable = false)
-    public Long assessmentId;
+	public Long assessmentId;
 
-    @ElementCollection
-    @CollectionTable(name = "test_assignment_questions", joinColumns = @JoinColumn(name = "assignment_id"))
-    @Column(name = "question_id", nullable = false)
-    public List<Long> questions = new ArrayList<>();
+	@ElementCollection
+	@CollectionTable(name = "test_assignment_questions", joinColumns = @JoinColumn(name = "assignment_id"))
+	@Column(name = "question_id", nullable = false)
+	public List<Long> questions = new ArrayList<>();
 
-    @Column(name = "due_date", nullable = false)
-    public LocalDate dueDate;
+	@Column(nullable = false)
+	public LocalDate dueDate;
 
-    @Column(nullable = false)
-    public String status = "assigned";
+	@Column(nullable = false)
+	public String status = "assigned";
 
-    @Column(name = "assigned_date", nullable = false, updatable = false)
-    public LocalDateTime assignedDate;
+	@Column(nullable = false, updatable = false)
+	public LocalDateTime assignedDate;
 
-    @PrePersist
-    public void onCreate() {
-        if (assignedDate == null) {
-            assignedDate = LocalDateTime.now();
-        }
-        if (status == null || status.isBlank()) {
-            status = "assigned";
-        }
-    }
+	public TestAssignment() {
+	}
+
+	@PrePersist
+	public void onCreate() {
+		if (assignedDate == null) {
+			assignedDate = LocalDateTime.now();
+		}
+		if (status == null || status.isBlank()) {
+			status = "assigned";
+		}
+	}
 }
+
+
