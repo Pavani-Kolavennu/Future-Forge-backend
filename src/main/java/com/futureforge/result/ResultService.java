@@ -2,6 +2,7 @@ package com.futureforge.result;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 
 import com.futureforge.assessment.Submission;
 import com.futureforge.common.ResourceNotFoundException;
@@ -28,7 +29,7 @@ public class ResultService {
 	}
 
 	public Result getById(Long resultId) {
-		return resultRepository.findById(resultId)
+		return resultRepository.findById(Objects.requireNonNull(resultId, "resultId is required"))
 				.orElseThrow(() -> new ResourceNotFoundException("Result not found"));
 	}
 

@@ -29,8 +29,6 @@ public class User {
 	@Column(nullable = false)
 	public String password;
 
-	@Column
-	public String phone;
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
@@ -52,7 +50,6 @@ public class User {
 		this.fullName = fullName;
 		this.email = email;
 		this.password = password;
-		this.phone = phone;
 		this.role = role == null ? Role.CANDIDATE : role;
 	}
 

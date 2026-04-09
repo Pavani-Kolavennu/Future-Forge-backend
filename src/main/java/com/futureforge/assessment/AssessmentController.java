@@ -9,21 +9,17 @@ import com.futureforge.result.ResultService;
 import com.futureforge.question.PublicQuestionDto;
 import com.futureforge.question.QuestionService;
 
-import jakarta.validation.Valid;
-
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping({"/api/assessments", "/assessment"})
+@RequestMapping("/api/assessments")
 public class AssessmentController {
 	private final AssessmentService assessmentService;
 	private final ResultService resultService;
@@ -36,39 +32,25 @@ public class AssessmentController {
 	}
 
 	@GetMapping
+	@PreAuthorize("hasRole('ADMIN')")
 	public List<Assessment> getAllAssessments() {
 		return assessmentService.findAll();
 	}
 
-	@GetMapping("/active")
-	public List<Assessment> getActiveAssessments() {
-		return assessmentService.findActive();
-	}
-
-	@GetMapping("/{assessmentId}")
-	public Assessment getAssessment(@PathVariable Long assessmentId) {
-		return assessmentService.getById(assessmentId);
+	@PostMapping
+	@PreAuthorize("hasRole('ADMIN')")
+	public ResponseEntity<Assessment> createAssessment(@RequestBody AssessmentRequest request) {
+		return ResponseEntity.ok(assessmentService.createAssessment(
+				request.title(),
+				request.durationMinutes(),
+				request.passingScore(),
+				request.active()
+		));
 	}
 
 	@GetMapping("/{assessmentId}/questions")
 	public List<PublicQuestionDto> getAssessmentQuestions(@PathVariable Long assessmentId) {
 		return questionService.toPublicQuestions(questionService.findByAssessment(assessmentId));
-	}
-
-	@PostMapping
-	public ResponseEntity<Assessment> createAssessment(@Valid @RequestBody Assessment assessment) {
-		return ResponseEntity.status(HttpStatus.CREATED).body(assessmentService.create(assessment));
-	}
-
-	@PutMapping("/{assessmentId}")
-	public Assessment updateAssessment(@PathVariable Long assessmentId, @Valid @RequestBody Assessment assessment) {
-		return assessmentService.update(assessmentId, assessment);
-	}
-
-	@DeleteMapping("/{assessmentId}")
-	public ResponseEntity<Void> deleteAssessment(@PathVariable Long assessmentId) {
-		assessmentService.delete(assessmentId);
-		return ResponseEntity.noContent().build();
 	}
 
 	@PostMapping("/{assessmentId}/submit")
@@ -78,6 +60,7 @@ public class AssessmentController {
 	}
 
 	@GetMapping("/submissions")
+	@PreAuthorize("hasRole('ADMIN')")
 	public Map<String, Map<String, Object>> getAllStudentSubmissions() {
 		Map<String, Map<String, Object>> grouped = new LinkedHashMap<>();
 		assessmentService.findAllSubmissions().forEach(submission -> {
@@ -91,6 +74,7 @@ public class AssessmentController {
 	}
 
 	@GetMapping("/submissions/student/{studentEmail}")
+	@PreAuthorize("hasRole('ADMIN') or #studentEmail.trim().toLowerCase() == authentication.principal.email")
 	public Map<String, Map<String, Object>> getStudentSubmissions(@PathVariable String studentEmail) {
 		Map<String, Map<String, Object>> grouped = new LinkedHashMap<>();
 		Map<String, Object> byAssignment = new LinkedHashMap<>();
@@ -104,6 +88,7 @@ public class AssessmentController {
 	}
 
 	@PostMapping("/submissions")
+	@PreAuthorize("hasRole('ADMIN') or #request.studentEmail().trim().toLowerCase() == authentication.principal.email")
 	public Map<String, Object> upsertStudentSubmission(@RequestBody StudentSubmissionRequest request) {
 		return toStudentSubmissionResponse(
 				assessmentService.upsertStudentSubmission(
@@ -130,5 +115,8 @@ public class AssessmentController {
 	}
 
 	public record StudentSubmissionRequest(String studentEmail, Long assignmentId, Map<String, Integer> answers) {
+	}
+
+	public record AssessmentRequest(String title, Integer durationMinutes, Integer passingScore, Boolean active) {
 	}
 }

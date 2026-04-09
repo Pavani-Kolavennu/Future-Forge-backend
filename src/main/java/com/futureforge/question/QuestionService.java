@@ -2,6 +2,7 @@ package com.futureforge.question;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import com.futureforge.assessment.AssessmentRepository;
 import com.futureforge.assessment.Option;
@@ -33,7 +34,7 @@ public class QuestionService {
 	}
 
 	public Question getById(Long questionId) {
-		return questionRepository.findById(questionId)
+		return questionRepository.findById(Objects.requireNonNull(questionId, "questionId is required"))
 				.orElseThrow(() -> new ResourceNotFoundException("Question not found"));
 	}
 
@@ -41,7 +42,7 @@ public class QuestionService {
 		validateAssessment(dto.assessmentId());
 		Question question = new Question();
 		apply(question, dto.assessmentId(), dto.text(), dto.explanation(), dto.active(), dto.options(), dto.correctOptionIndex());
-		return questionRepository.save(question);
+		return questionRepository.save(Objects.requireNonNull(question, "question is required"));
 	}
 
 	public Question update(Long questionId, UpdateQuestionDto dto) {
@@ -55,11 +56,11 @@ public class QuestionService {
 				dto.active() == null ? question.active : dto.active(),
 				dto.options() == null ? question.options.stream().map(option -> option.text).toList() : dto.options(),
 				dto.correctOptionIndex() == null ? question.correctOptionIndex : dto.correctOptionIndex());
-		return questionRepository.save(question);
+		return questionRepository.save(Objects.requireNonNull(question, "question is required"));
 	}
 
 	public void delete(Long questionId) {
-		questionRepository.delete(getById(questionId));
+		questionRepository.delete(Objects.requireNonNull(getById(questionId), "question is required"));
 	}
 
 	public AdminQuestion toAdminQuestion(Question question) {

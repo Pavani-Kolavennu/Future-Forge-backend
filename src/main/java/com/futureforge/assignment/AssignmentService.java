@@ -2,6 +2,7 @@ package com.futureforge.assignment;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
 import com.futureforge.assessment.AssessmentRepository;
 import com.futureforge.common.ResourceNotFoundException;
@@ -26,11 +27,11 @@ public class AssignmentService {
 	}
 
 	public List<TestAssignment> findByStudentId(String studentId) {
-		return assignmentRepository.findByStudentId(studentId);
+		return assignmentRepository.findByStudentId(studentId.trim().toLowerCase());
 	}
 
 	public TestAssignment getById(Long assignmentId) {
-		return assignmentRepository.findById(assignmentId)
+		return assignmentRepository.findById(Objects.requireNonNull(assignmentId, "assignmentId is required"))
 				.orElseThrow(() -> new ResourceNotFoundException("Assignment not found"));
 	}
 
@@ -38,7 +39,8 @@ public class AssignmentService {
 		if (dto.questions() == null || dto.questions().isEmpty()) {
 			throw new ValidationException("At least one question is required");
 		}
-		if (!assessmentRepository.existsById(dto.assessmentId())) {
+		Long assessmentId = dto.assessmentId();
+		if (assessmentId == null || !assessmentRepository.existsById(assessmentId)) {
 			throw new ValidationException("Assessment not found");
 		}
 
@@ -51,7 +53,7 @@ public class AssignmentService {
 
 		TestAssignment assignment = new TestAssignment();
 		assignment.studentId = dto.studentId().trim().toLowerCase();
-		assignment.assessmentId = dto.assessmentId();
+		assignment.assessmentId = assessmentId;
 		assignment.questions = dto.questions();
 		assignment.dueDate = parsedDueDate;
 		assignment.status = dto.status() == null || dto.status().isBlank() ? "assigned" : dto.status();
@@ -59,7 +61,7 @@ public class AssignmentService {
 	}
 
 	public TestAssignment updateStatus(Long assignmentId, String status) {
-		TestAssignment assignment = getById(assignmentId);
+		TestAssignment assignment = getById(Objects.requireNonNull(assignmentId, "assignmentId is required"));
 		if (status == null || status.isBlank()) {
 			throw new ValidationException("Status is required");
 		}
@@ -68,6 +70,6 @@ public class AssignmentService {
 	}
 
 	public void delete(Long assignmentId) {
-		assignmentRepository.delete(getById(assignmentId));
+		assignmentRepository.delete(Objects.requireNonNull(getById(assignmentId), "assignment is required"));
 	}
 }

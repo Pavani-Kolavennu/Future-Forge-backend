@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping({"/api/admin/questions", "/admin/questions"})
+@RequestMapping("/api/admin/questions")
 public class AdminQuestionController {
 	private final QuestionService questionService;
 
@@ -34,7 +34,7 @@ public class AdminQuestionController {
 		return questionService.toSimpleQuestions(questionService.findAll());
 	}
 
-	@GetMapping("/{questionId}")
+	@GetMapping("/{questionId:\\d+}")
 	public AdminQuestion getQuestion(@PathVariable Long questionId) {
 		return questionService.toAdminQuestion(questionService.getById(questionId));
 	}
@@ -55,12 +55,12 @@ public class AdminQuestionController {
 				.body(questionService.toSimpleQuestion(questionService.createSimpleQuestion(request.text(), request.options())));
 	}
 
-	@PutMapping("/{questionId}")
+	@PutMapping("/{questionId:\\d+}")
 	public AdminQuestion updateQuestion(@PathVariable Long questionId, @RequestBody UpdateQuestionDto dto) {
 		return questionService.toAdminQuestion(questionService.update(questionId, dto));
 	}
 
-	@DeleteMapping("/{questionId}")
+	@DeleteMapping("/{questionId:\\d+}")
 	public ResponseEntity<Void> deleteQuestion(@PathVariable Long questionId) {
 		questionService.delete(questionId);
 		return ResponseEntity.noContent().build();

@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping({"/api/admin/assignments", "/admin/assignments"})
+@RequestMapping("/api/admin/assignments")
 public class AdminAssignmentController {
 	private final AssignmentService assignmentService;
 

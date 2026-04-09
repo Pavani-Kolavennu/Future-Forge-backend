@@ -1,6 +1,7 @@
 package com.futureforge.user;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import com.futureforge.common.ResourceNotFoundException;
@@ -22,7 +23,7 @@ public class UserService implements com.futureforge.auth.UserService {
 
 	@Override
 	public Optional<User> findById(Long id) {
-		return userRepository.findById(id);
+		return userRepository.findById(Objects.requireNonNull(id, "id is required"));
 	}
 
 	@Override
@@ -42,33 +43,31 @@ public class UserService implements com.futureforge.auth.UserService {
 
 	@Override
 	public User save(User user) {
-		return userRepository.save(user);
+		return userRepository.save(Objects.requireNonNull(user, "user is required"));
 	}
 
 	public UserProfileDto toProfileDto(User user) {
-		return new UserProfileDto(user.id, user.fullName, user.email, user.phone, user.role, user.enabled);
+		return new UserProfileDto(user.id, user.fullName, user.email, user.role, user.enabled);
 	}
 
 	public UserProfileDto getProfile(Long userId) {
-		return userRepository.findById(userId)
+		return userRepository.findById(Objects.requireNonNull(userId, "userId is required"))
 				.map(this::toProfileDto)
 				.orElseThrow(() -> new ResourceNotFoundException("User not found"));
 	}
 
 	public UserProfileDto updateProfile(Long userId, UpdateProfileDto dto) {
-		User user = userRepository.findById(userId)
+		User user = userRepository.findById(Objects.requireNonNull(userId, "userId is required"))
 				.orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
 		if (dto.fullName() != null && !dto.fullName().isBlank()) {
 			user.fullName = dto.fullName();
 		}
-		if (dto.phone() != null) {
-			user.phone = dto.phone();
-		}
+		
 		if (dto.password() != null && !dto.password().isBlank()) {
 			user.password = passwordEncoder.encode(dto.password());
 		}
 
-		return toProfileDto(userRepository.save(user));
+		return toProfileDto(userRepository.save(Objects.requireNonNull(user, "user is required")));
 	}
 }

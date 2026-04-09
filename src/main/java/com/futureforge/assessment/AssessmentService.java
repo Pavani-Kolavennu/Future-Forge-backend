@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import com.futureforge.assignment.TestAssignment;
 import com.futureforge.assignment.TestAssignmentRepository;
@@ -28,35 +29,26 @@ public class AssessmentService {
 		this.testAssignmentRepository = testAssignmentRepository;
 	}
 
+	public Assessment getById(Long assessmentId) {
+		return assessmentRepository.findById(Objects.requireNonNull(assessmentId, "assessmentId is required"))
+				.orElseThrow(() -> new ResourceNotFoundException("Assessment not found"));
+	}
+
 	public List<Assessment> findAll() {
 		return assessmentRepository.findAll();
 	}
 
-	public List<Assessment> findActive() {
-		return assessmentRepository.findByActiveTrueOrderByCreatedAtDesc();
-	}
+	public Assessment createAssessment(String title, Integer durationMinutes, Integer passingScore, Boolean active) {
+		if (title == null || title.isBlank()) {
+			throw new ValidationException("Assessment title is required");
+		}
 
-	public Assessment getById(Long assessmentId) {
-		return assessmentRepository.findById(assessmentId)
-				.orElseThrow(() -> new ResourceNotFoundException("Assessment not found"));
-	}
-
-	public Assessment create(Assessment assessment) {
-		assessment.id = null;
+		Assessment assessment = new Assessment();
+		assessment.title = title.trim();
+		assessment.durationMinutes = durationMinutes;
+		assessment.passingScore = passingScore;
+		assessment.active = active == null || active;
 		return assessmentRepository.save(assessment);
-	}
-
-	public Assessment update(Long assessmentId, Assessment update) {
-		Assessment assessment = getById(assessmentId);
-		assessment.title = update.title;
-		assessment.durationMinutes = update.durationMinutes;
-		assessment.passingScore = update.passingScore;
-		assessment.active = update.active;
-		return assessmentRepository.save(assessment);
-	}
-
-	public void delete(Long assessmentId) {
-		assessmentRepository.delete(getById(assessmentId));
 	}
 
 	public Submission submitAssessment(Long assessmentId, Submission submission) {

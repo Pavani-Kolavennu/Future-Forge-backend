@@ -2,6 +2,7 @@ package com.futureforge.suggestion;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import com.futureforge.common.ValidationException;
 
@@ -51,6 +52,22 @@ public class SuggestionService {
 
 	public void deleteByStudentId(String studentId) {
 		suggestionRepository.deleteByStudentId(studentId.trim().toLowerCase());
+	}
+
+	public Optional<Map<String, Object>> findByStudentId(String studentId) {
+		if (studentId == null || studentId.isBlank()) {
+			return Optional.empty();
+		}
+
+		return suggestionRepository.findByStudentId(studentId.trim().toLowerCase())
+				.map(item -> {
+					Map<String, Object> value = new LinkedHashMap<>();
+					value.put("studentId", item.studentId);
+					value.put("career", item.career);
+					value.put("suggestion", item.suggestion);
+					value.put("date", item.date.toString());
+					return value;
+				});
 	}
 
 }
