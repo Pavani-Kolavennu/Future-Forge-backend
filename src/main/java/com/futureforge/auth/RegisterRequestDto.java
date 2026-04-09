@@ -17,7 +17,6 @@ public record RegisterRequestDto(
 		String email,
 		@NotBlank(message = "Password is required")
 		String password,
-		String phone,
 		@JsonProperty("role")
 		Role role
 ) {

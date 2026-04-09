@@ -28,35 +28,9 @@ public class AssessmentService {
 		this.testAssignmentRepository = testAssignmentRepository;
 	}
 
-	public List<Assessment> findAll() {
-		return assessmentRepository.findAll();
-	}
-
-	public List<Assessment> findActive() {
-		return assessmentRepository.findByActiveTrueOrderByCreatedAtDesc();
-	}
-
 	public Assessment getById(Long assessmentId) {
 		return assessmentRepository.findById(assessmentId)
 				.orElseThrow(() -> new ResourceNotFoundException("Assessment not found"));
-	}
-
-	public Assessment create(Assessment assessment) {
-		assessment.id = null;
-		return assessmentRepository.save(assessment);
-	}
-
-	public Assessment update(Long assessmentId, Assessment update) {
-		Assessment assessment = getById(assessmentId);
-		assessment.title = update.title;
-		assessment.durationMinutes = update.durationMinutes;
-		assessment.passingScore = update.passingScore;
-		assessment.active = update.active;
-		return assessmentRepository.save(assessment);
-	}
-
-	public void delete(Long assessmentId) {
-		assessmentRepository.delete(getById(assessmentId));
 	}
 
 	public Submission submitAssessment(Long assessmentId, Submission submission) {

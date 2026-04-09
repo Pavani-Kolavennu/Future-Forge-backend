@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping({"/api/admin/suggestions", "/admin/suggestions"})
+@RequestMapping("/api/admin/suggestions")
 public class AdminSuggestionController {
 	private final SuggestionService suggestionService;
 

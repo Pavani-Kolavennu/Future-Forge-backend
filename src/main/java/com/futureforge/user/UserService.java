@@ -46,7 +46,7 @@ public class UserService implements com.futureforge.auth.UserService {
 	}
 
 	public UserProfileDto toProfileDto(User user) {
-		return new UserProfileDto(user.id, user.fullName, user.email, user.phone, user.role, user.enabled);
+		return new UserProfileDto(user.id, user.fullName, user.email, user.role, user.enabled);
 	}
 
 	public UserProfileDto getProfile(Long userId) {
@@ -62,9 +62,7 @@ public class UserService implements com.futureforge.auth.UserService {
 		if (dto.fullName() != null && !dto.fullName().isBlank()) {
 			user.fullName = dto.fullName();
 		}
-		if (dto.phone() != null) {
-			user.phone = dto.phone();
-		}
+		
 		if (dto.password() != null && !dto.password().isBlank()) {
 			user.password = passwordEncoder.encode(dto.password());
 		}

@@ -50,8 +50,7 @@ public class AuthServiceImpl implements AuthService {
 		User user = new User();
 		user.fullName = request.fullName();
 		user.email = request.email().toLowerCase();
-		user.password = passwordEncoder.encode(request.password());
-		user.phone = request.phone();
+		user.password = passwordEncoder.encode(request.password());	
 		user.role = request.role() == null ? Role.CANDIDATE : request.role();
 		user.enabled = true;
 
