@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/admin/questions")
-@RequestMapping("/api/admin/questions")
 public class AdminQuestionController {
 
     private final QuestionService questionService;
