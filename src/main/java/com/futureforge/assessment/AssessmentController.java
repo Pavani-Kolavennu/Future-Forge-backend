@@ -9,6 +9,8 @@ import com.futureforge.result.ResultService;
 import com.futureforge.question.PublicQuestionDto;
 import com.futureforge.question.QuestionService;
 
+import jakarta.validation.Valid;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,23 +31,6 @@ public class AssessmentController {
 		this.assessmentService = assessmentService;
 		this.resultService = resultService;
 		this.questionService = questionService;
-	}
-
-	@GetMapping
-	@PreAuthorize("hasRole('ADMIN')")
-	public List<Assessment> getAllAssessments() {
-		return assessmentService.findAll();
-	}
-
-	@PostMapping
-	@PreAuthorize("hasRole('ADMIN')")
-	public ResponseEntity<Assessment> createAssessment(@RequestBody AssessmentRequest request) {
-		return ResponseEntity.ok(assessmentService.createAssessment(
-				request.title(),
-				request.durationMinutes(),
-				request.passingScore(),
-				request.active()
-		));
 	}
 
 	@GetMapping("/{assessmentId}/questions")

@@ -6,28 +6,24 @@ import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/admin/questions")
+@RequestMapping("/api/admin/questions")
 public class AdminQuestionController {
-	private final QuestionService questionService;
 
-	public AdminQuestionController(QuestionService questionService) {
-		this.questionService = questionService;
-	}
+    private final QuestionService questionService;
 
-	@GetMapping
-	public List<AdminQuestion> getAllQuestions() {
-		return questionService.toAdminQuestions(questionService.findAll());
-	}
+    public AdminQuestionController(QuestionService questionService) {
+        this.questionService = questionService;
+    }
+
+   
+    @GetMapping
+    public List<AdminQuestion> getAllQuestions() {
+        return questionService.toAdminQuestions(questionService.findAll());
+    }
 
 	@GetMapping("/simple")
 	public List<QuestionService.SimpleQuestionDto> getSimpleQuestions() {
@@ -69,4 +65,3 @@ public class AdminQuestionController {
 	public record SimpleCreateQuestionRequest(String text, List<String> options) {
 	}
 }
-
