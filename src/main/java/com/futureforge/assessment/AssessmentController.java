@@ -3,11 +3,13 @@ package com.futureforge.assessment;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
-import com.futureforge.result.ResultService;
 import com.futureforge.question.PublicQuestionDto;
 import com.futureforge.question.QuestionService;
+import com.futureforge.result.ResultDto;
+import com.futureforge.result.ResultService;
 
 import jakarta.validation.Valid;
 
@@ -23,85 +25,120 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/assessments")
 public class AssessmentController {
-	private final AssessmentService assessmentService;
-	private final ResultService resultService;
-	private final QuestionService questionService;
 
-	public AssessmentController(AssessmentService assessmentService, ResultService resultService, QuestionService questionService) {
-		this.assessmentService = assessmentService;
-		this.resultService = resultService;
-		this.questionService = questionService;
-	}
+    private final AssessmentService assessmentService;
+    private final ResultService resultService;
+    private final QuestionService questionService;
 
-	@GetMapping("/{assessmentId}/questions")
-	public List<PublicQuestionDto> getAssessmentQuestions(@PathVariable Long assessmentId) {
-		return questionService.toPublicQuestions(questionService.findByAssessment(assessmentId));
-	}
+    public AssessmentController(
+            AssessmentService assessmentService,
+            ResultService resultService,
+            QuestionService questionService) {
+        this.assessmentService = assessmentService;
+        this.resultService = resultService;
+        this.questionService = questionService;
+    }
 
-	@PostMapping("/{assessmentId}/submit")
-	public ResponseEntity<com.futureforge.result.ResultDto> submitAssessment(@PathVariable Long assessmentId, @RequestBody Submission submission) {
-		Submission savedSubmission = assessmentService.submitAssessment(assessmentId, submission);
-		return ResponseEntity.ok(resultService.toDto(resultService.recordResult(savedSubmission)));
-	}
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<Assessment> getAllAssessments() {
+        return assessmentService.findAll();
+    }
 
-	@GetMapping("/submissions")
-	@PreAuthorize("hasRole('ADMIN')")
-	public Map<String, Map<String, Object>> getAllStudentSubmissions() {
-		Map<String, Map<String, Object>> grouped = new LinkedHashMap<>();
-		assessmentService.findAllSubmissions().forEach(submission -> {
-			if (submission.studentEmail == null || submission.studentEmail.isBlank() || submission.assignmentId == null) {
-				return;
-			}
-			Map<String, Object> byAssignment = grouped.computeIfAbsent(submission.studentEmail, key -> new LinkedHashMap<>());
-			byAssignment.put(String.valueOf(submission.assignmentId), toStudentSubmissionResponse(submission));
-		});
-		return grouped;
-	}
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public Assessment createAssessment(@Valid @RequestBody AssessmentRequest request) {
+        return assessmentService.createAssessment(
+                request.title(),
+                request.durationMinutes(),
+                request.passingScore(),
+                request.active()
+        );
+    }
 
-	@GetMapping("/submissions/student/{studentEmail}")
-	@PreAuthorize("hasRole('ADMIN') or #studentEmail.trim().toLowerCase() == authentication.principal.email")
-	public Map<String, Map<String, Object>> getStudentSubmissions(@PathVariable String studentEmail) {
-		Map<String, Map<String, Object>> grouped = new LinkedHashMap<>();
-		Map<String, Object> byAssignment = new LinkedHashMap<>();
-		assessmentService.findSubmissionsByStudentEmail(studentEmail.trim().toLowerCase()).forEach(submission -> {
-			if (submission.assignmentId != null) {
-				byAssignment.put(String.valueOf(submission.assignmentId), toStudentSubmissionResponse(submission));
-			}
-		});
-		grouped.put(studentEmail.trim().toLowerCase(), byAssignment);
-		return grouped;
-	}
+    @GetMapping("/{assessmentId}/questions")
+    public List<PublicQuestionDto> getAssessmentQuestions(@PathVariable Long assessmentId) {
+        return questionService.toPublicQuestions(questionService.findByAssessment(assessmentId));
+    }
 
-	@PostMapping("/submissions")
-	@PreAuthorize("hasRole('ADMIN') or #request.studentEmail().trim().toLowerCase() == authentication.principal.email")
-	public Map<String, Object> upsertStudentSubmission(@RequestBody StudentSubmissionRequest request) {
-		return toStudentSubmissionResponse(
-				assessmentService.upsertStudentSubmission(
-						request.studentEmail(),
-						request.assignmentId(),
-						request.answers()
-				)
-		);
-	}
+    @PostMapping("/{assessmentId}/submit")
+    public ResponseEntity<ResultDto> submitAssessment(
+            @PathVariable Long assessmentId,
+            @Valid @RequestBody Submission submission) {
+        Submission savedSubmission = assessmentService.submitAssessment(assessmentId, submission);
+        return ResponseEntity.ok(resultService.toDto(resultService.recordResult(savedSubmission)));
+    }
 
-	private Map<String, Object> toStudentSubmissionResponse(Submission submission) {
-		Map<String, Integer> answers = new LinkedHashMap<>();
-		submission.answers.forEach(answer -> {
-			if (answer.questionId != null && answer.selectedOptionIndex != null) {
-				answers.put(String.valueOf(answer.questionId), answer.selectedOptionIndex);
-			}
-		});
+    @GetMapping("/submissions")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Map<String, Map<String, Object>> getAllStudentSubmissions() {
+        Map<String, Map<String, Object>> grouped = new LinkedHashMap<>();
 
-		Map<String, Object> response = new LinkedHashMap<>();
-		response.put("answers", answers);
-		response.put("submittedAt", submission.submittedAt == null ? Instant.now().toString() : submission.submittedAt.toString());
-		response.put("assignmentId", submission.assignmentId);
-		return response;
-	}
+        assessmentService.findAllSubmissions().forEach(submission -> {
+            String studentEmail = normalizeEmail(submission.studentEmail);
+            if (studentEmail == null || submission.assignmentId == null) {
+                return;
+            }
 
-	public record StudentSubmissionRequest(String studentEmail, Long assignmentId, Map<String, Integer> answers) {
-	}
+            grouped.computeIfAbsent(studentEmail, key -> new LinkedHashMap<>())
+                    .put(String.valueOf(submission.assignmentId), toStudentSubmissionResponse(submission));
+        });
 
-	public record AssessmentRequest(String title, Integer durationMinutes, Integer passingScore, Boolean active) {
-	}
+        return grouped;
+    }
+
+    @GetMapping("/submissions/student/{studentEmail}")
+    @PreAuthorize("hasRole('ADMIN') or #studentEmail != null and authentication.principal.email != null and #studentEmail.trim().equalsIgnoreCase(authentication.principal.email.trim())")
+    public Map<String, Map<String, Object>> getStudentSubmissions(@PathVariable String studentEmail) {
+        String normalizedEmail = normalizeEmail(studentEmail);
+        Map<String, Map<String, Object>> grouped = new LinkedHashMap<>();
+        Map<String, Object> byAssignment = new LinkedHashMap<>();
+
+        assessmentService.findSubmissionsByStudentEmail(normalizedEmail).forEach(submission -> {
+            if (submission.assignmentId != null) {
+                byAssignment.put(String.valueOf(submission.assignmentId), toStudentSubmissionResponse(submission));
+            }
+        });
+
+        grouped.put(normalizedEmail, byAssignment);
+        return grouped;
+    }
+
+    @PostMapping("/submissions")
+    @PreAuthorize("hasRole('ADMIN') or #request.studentEmail != null and authentication.principal.email != null and #request.studentEmail.trim().equalsIgnoreCase(authentication.principal.email.trim())")
+    public Map<String, Object> upsertStudentSubmission(@Valid @RequestBody StudentSubmissionRequest request) {
+        return toStudentSubmissionResponse(
+                assessmentService.upsertStudentSubmission(
+                        normalizeEmail(request.studentEmail()),
+                        request.assignmentId(),
+                        request.answers()
+                )
+        );
+    }
+
+    private Map<String, Object> toStudentSubmissionResponse(Submission submission) {
+        Map<String, Integer> answers = new LinkedHashMap<>();
+        submission.answers.forEach(answer -> {
+            if (answer.questionId != null && answer.selectedOptionIndex != null) {
+                answers.put(String.valueOf(answer.questionId), answer.selectedOptionIndex);
+            }
+        });
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("answers", answers);
+        response.put("submittedAt", submission.submittedAt == null ? Instant.now().toString() : submission.submittedAt.toString());
+        response.put("assignmentId", submission.assignmentId);
+        response.put("studentEmail", normalizeEmail(submission.studentEmail));
+        return response;
+    }
+
+    private String normalizeEmail(String email) {
+        return email == null ? null : email.trim().toLowerCase(Locale.ROOT);
+    }
+
+    public record StudentSubmissionRequest(String studentEmail, Long assignmentId, Map<String, Integer> answers) {
+    }
+
+    public record AssessmentRequest(String title, Integer durationMinutes, Integer passingScore, Boolean active) {
+    }
 }
