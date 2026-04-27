@@ -29,14 +29,8 @@ public class Question {
 	@Column(nullable = false, length = 2000)
 	public String text;
 
-	@Column(length = 4000)
-	public String explanation;
-
 	@Column(nullable = false)
 	public boolean active = true;
-
-	@Column(nullable = false)
-	public Integer correctOptionIndex;
 
 	@ElementCollection
 	@CollectionTable(name = "question_options", joinColumns = @JoinColumn(name = "question_id"))

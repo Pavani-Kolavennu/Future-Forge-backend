@@ -8,12 +8,9 @@ import java.util.Map;
 
 import com.futureforge.question.PublicQuestionDto;
 import com.futureforge.question.QuestionService;
-import com.futureforge.result.ResultDto;
-import com.futureforge.result.ResultService;
 
 import jakarta.validation.Valid;
 
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,15 +24,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class AssessmentController {
 
     private final AssessmentService assessmentService;
-    private final ResultService resultService;
     private final QuestionService questionService;
 
     public AssessmentController(
             AssessmentService assessmentService,
-            ResultService resultService,
             QuestionService questionService) {
         this.assessmentService = assessmentService;
-        this.resultService = resultService;
         this.questionService = questionService;
     }
 
@@ -50,8 +44,6 @@ public class AssessmentController {
     public Assessment createAssessment(@Valid @RequestBody AssessmentRequest request) {
         return assessmentService.createAssessment(
                 request.title(),
-                request.durationMinutes(),
-                request.passingScore(),
                 request.active()
         );
     }
@@ -59,14 +51,6 @@ public class AssessmentController {
     @GetMapping("/{assessmentId}/questions")
     public List<PublicQuestionDto> getAssessmentQuestions(@PathVariable Long assessmentId) {
         return questionService.toPublicQuestions(questionService.findByAssessment(assessmentId));
-    }
-
-    @PostMapping("/{assessmentId}/submit")
-    public ResponseEntity<ResultDto> submitAssessment(
-            @PathVariable Long assessmentId,
-            @Valid @RequestBody Submission submission) {
-        Submission savedSubmission = assessmentService.submitAssessment(assessmentId, submission);
-        return ResponseEntity.ok(resultService.toDto(resultService.recordResult(savedSubmission)));
     }
 
     @GetMapping("/submissions")
@@ -139,6 +123,6 @@ public class AssessmentController {
     public record StudentSubmissionRequest(String studentEmail, Long assignmentId, Map<String, Integer> answers) {
     }
 
-    public record AssessmentRequest(String title, Integer durationMinutes, Integer passingScore, Boolean active) {
+    public record AssessmentRequest(String title, Boolean active) {
     }
 }

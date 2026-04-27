@@ -8,9 +8,7 @@ public record AdminQuestion(
 		Long id,
 		Long assessmentId,
 		String text,
-		String explanation,
 		boolean active,
-		List<Option> options,
-		Integer correctOptionIndex
+		List<Option> options
 ) {
 }

@@ -33,15 +33,6 @@ public class Submission {
 	public Long assessmentId;
 
 	@Column(nullable = false)
-	public int score;
-
-	@Column(nullable = false)
-	public int totalQuestions;
-
-	@Column(nullable = false)
-	public double percentage;
-
-	@Column(nullable = false)
 	public Instant submittedAt;
 
 	@ElementCollection

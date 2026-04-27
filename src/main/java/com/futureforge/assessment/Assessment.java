@@ -21,11 +21,6 @@ public class Assessment {
 	@Column(nullable = false)
 	public String title;
 
-
-	public Integer durationMinutes;
-
-	public Integer passingScore;
-
 	@Column(nullable = false)
 	public boolean active = true;
 

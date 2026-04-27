@@ -10,11 +10,6 @@ public class SubmissionAnswer {
 
 	public Integer selectedOptionIndex;
 
-	public String selectedOptionText;
-
-	@Column(nullable = false)
-	public boolean correct;
-
 	public SubmissionAnswer() {
 	}
 }

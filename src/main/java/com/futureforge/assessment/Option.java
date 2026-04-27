@@ -8,15 +8,11 @@ public class Option {
 	@Column(nullable = false)
 	public String text;
 
-	@Column(nullable = false)
-	public boolean correct;
-
 	public Option() {
 	}
 
-	public Option(String text, boolean correct) {
+	public Option(String text) {
 		this.text = text;
-		this.correct = correct;
 	}
 }
 

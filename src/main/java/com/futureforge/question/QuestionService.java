@@ -41,7 +41,7 @@ public class QuestionService {
 	public Question create(CreateQuestionDto dto) {
 		validateAssessment(dto.assessmentId());
 		Question question = new Question();
-		apply(question, dto.assessmentId(), dto.text(), dto.explanation(), dto.active(), dto.options(), dto.correctOptionIndex());
+		apply(question, dto.assessmentId(), dto.text(), dto.active(), dto.options());
 		return questionRepository.save(Objects.requireNonNull(question, "question is required"));
 	}
 
@@ -52,10 +52,8 @@ public class QuestionService {
 		apply(question,
 				assessmentId,
 				dto.text() == null ? question.text : dto.text(),
-				dto.explanation() == null ? question.explanation : dto.explanation(),
 				dto.active() == null ? question.active : dto.active(),
-				dto.options() == null ? question.options.stream().map(option -> option.text).toList() : dto.options(),
-				dto.correctOptionIndex() == null ? question.correctOptionIndex : dto.correctOptionIndex());
+				dto.options() == null ? question.options.stream().map(option -> option.text).toList() : dto.options());
 		return questionRepository.save(Objects.requireNonNull(question, "question is required"));
 	}
 
@@ -64,7 +62,7 @@ public class QuestionService {
 	}
 
 	public AdminQuestion toAdminQuestion(Question question) {
-		return new AdminQuestion(question.id, question.assessmentId, question.text, question.explanation, question.active, question.options, question.correctOptionIndex);
+		return new AdminQuestion(question.id, question.assessmentId, question.text, question.active, question.options);
 	}
 
 	public List<AdminQuestion> toAdminQuestions(List<Question> questions) {
@@ -88,7 +86,7 @@ public class QuestionService {
 			throw new ValidationException("Question text is required");
 		}
 		Question question = new Question();
-		apply(question, 0L, text, null, true, options, 0);
+		apply(question, 0L, text, true, options);
 		return questionRepository.save(question);
 	}
 
@@ -97,7 +95,6 @@ public class QuestionService {
 				question.id,
 				question.assessmentId,
 				question.text,
-				question.explanation,
 				question.options.stream().map(option -> option.text).toList());
 	}
 
@@ -111,23 +108,17 @@ public class QuestionService {
 		}
 	}
 
-	private void apply(Question question, Long assessmentId, String text, String explanation, Boolean active, List<String> options, Integer correctOptionIndex) {
+	private void apply(Question question, Long assessmentId, String text, Boolean active, List<String> options) {
 		if (options == null || options.size() < 2) {
 			throw new ValidationException("At least two options are required");
-		}
-		if (correctOptionIndex == null || correctOptionIndex < 0 || correctOptionIndex >= options.size()) {
-			throw new ValidationException("Correct option index is invalid");
 		}
 
 		question.assessmentId = assessmentId;
 		question.text = text;
-		question.explanation = explanation;
 		question.active = active == null || active;
-		question.correctOptionIndex = correctOptionIndex;
 		question.options = new ArrayList<>(options.stream()
-				.map(optionText -> new Option(optionText, false))
+				.map(Option::new)
 				.toList());
-		question.options.set(correctOptionIndex, new Option(options.get(correctOptionIndex), true));
 	}
 
 	public record SimpleQuestionDto(Long id, String text, List<String> options) {

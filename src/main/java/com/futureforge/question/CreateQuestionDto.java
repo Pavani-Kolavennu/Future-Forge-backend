@@ -11,13 +11,10 @@ public record CreateQuestionDto(
 		Long assessmentId,
 		@NotBlank(message = "Question text is required")
 		String text,
-		String explanation,
 		Boolean active,
 		@NotNull(message = "Options are required")
 		@Size(min = 2, message = "At least two options are required")
-		List<@NotBlank(message = "Option text is required") String> options,
-		@NotNull(message = "Correct option index is required")
-		Integer correctOptionIndex
+		List<@NotBlank(message = "Option text is required") String> options
 ) {
 }
 
