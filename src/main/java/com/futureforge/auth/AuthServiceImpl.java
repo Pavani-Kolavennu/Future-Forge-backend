@@ -49,7 +49,7 @@ public class AuthServiceImpl implements AuthService {
 		User user = new User();
 		user.fullName = request.fullName();
 		user.email = request.email().toLowerCase();
-		user.password = passwordEncoder.encode(request.password());	
+		user.password = passwordEncoder.encode(request.password());    
 		user.role = request.role() == null ? Role.CANDIDATE : request.role();
 		user.enabled = true;
 
@@ -59,10 +59,10 @@ public class AuthServiceImpl implements AuthService {
 	@Override
 	public AuthResponseDto login(AuthRequestDto request) {
 		User user = userService.findByEmail(request.email().trim().toLowerCase())
-		        .orElseThrow(() -> new UnauthorizedException("Invalid email or password"));
+				.orElseThrow(() -> new UnauthorizedException("Invalid email or password"));
 
 		if (!passwordEncoder.matches(request.password(), user.password)) {
-		    throw new UnauthorizedException("Invalid email or password");
+			throw new UnauthorizedException("Invalid email or password");
 		}
 		if (!user.enabled) {
 			throw new UnauthorizedException("User account is disabled");
