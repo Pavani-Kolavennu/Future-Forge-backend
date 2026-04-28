@@ -73,6 +73,7 @@ public class AuthServiceImpl implements AuthService {
 
 	@Override
 	public OtpSendResponseDto sendOtp(OtpRequestDto request) {
+
 	    String email = normalizeEmail(request.email());
 	    String otp = generateOtp();
 
@@ -80,13 +81,11 @@ public class AuthServiceImpl implements AuthService {
 
 	    otpStore.put(email, new OtpEntry(otp, Instant.now().plus(OTP_TTL)));
 
-	    boolean delivered = trySendOtpEmail(email, otp);
+	    new Thread(() -> {
+	        trySendOtpEmail(email, otp);
+	    }).start();
 
-	    String message = delivered
-	            ? "OTP sent to email"
-	            : "OTP generated. Email delivery is not available, but verification can continue in this environment.";
-
-	    return new OtpSendResponseDto(true, message);
+	    return new OtpSendResponseDto(true, "OTP generated. Check email (if delivery works).");
 	}
 
 	@Override
