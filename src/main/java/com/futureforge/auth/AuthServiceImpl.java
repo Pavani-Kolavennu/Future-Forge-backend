@@ -5,6 +5,8 @@ import com.futureforge.common.ValidationException;
 import com.futureforge.user.Role;
 import com.futureforge.user.User;
 
+import okhttp3.*;
+
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
@@ -13,9 +15,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.mail.MailException;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,14 +29,12 @@ public class AuthServiceImpl implements AuthService {
 	private final UserService userService;
 	private final PasswordEncoder passwordEncoder;
 	private final JwtService jwtService;
-	private final JavaMailSender mailSender;
 	private final Map<String, OtpEntry> otpStore = new ConcurrentHashMap<>();
 
-	public AuthServiceImpl(UserService userService, PasswordEncoder passwordEncoder, JwtService jwtService, JavaMailSender mailSender) {
+	public AuthServiceImpl(UserService userService, PasswordEncoder passwordEncoder, JwtService jwtService) {
 		this.userService = userService;
 		this.passwordEncoder = passwordEncoder;
 		this.jwtService = jwtService;
-		this.mailSender = mailSender;
 	}
 
 	@Override
@@ -121,19 +118,37 @@ public class AuthServiceImpl implements AuthService {
 	}
 
 	private boolean trySendOtpEmail(String email, String otp) {
-		try {
-			SimpleMailMessage message = new SimpleMailMessage();
-			message.setTo(email);
-			message.setSubject("Your Career Assessment OTP");
-			message.setText("Your OTP is " + otp + ". It expires in 10 minutes.");
-			mailSender.send(message);
-			return true;
-		} catch (MailException ex) {
-			log.warn("Unable to send OTP email to {}: {}", email, ex.getMessage());
-			return false;
-		}
-	}
+	    try {
+	        OkHttpClient client = new OkHttpClient();
 
+	        String json = "{"
+	                + "\"from\":\"onboarding@resend.dev\","
+	                + "\"to\":[\"" + email + "\"],"
+	                + "\"subject\":\"Your Career Assessment OTP\","
+	                + "\"html\":\"<h2>Your OTP is: " + otp + "</h2><p>Expires in 10 minutes.</p>\""
+	                + "}";
+
+	        Request request = new Request.Builder()
+	                .url("https://api.resend.com/emails")
+	                .post(RequestBody.create(json, MediaType.parse("application/json")))
+	                .addHeader("Authorization", "Bearer " + System.getenv("RESEND_API_KEY"))
+	                .addHeader("Content-Type", "application/json")
+	                .build();
+
+	        Response response = client.newCall(request).execute();
+
+	        if (!response.isSuccessful()) {
+	            log.warn("Resend email failed: {}", response.body().string());
+	            return false;
+	        }
+
+	        return true;
+
+	    } catch (Exception e) {
+	        log.warn("Unable to send OTP email to {}: {}", email, e.getMessage());
+	        return false;
+	    }
+	}
 	private record OtpEntry(String code, Instant expiresAt) {
 		private boolean isExpired() {
 			return Instant.now().isAfter(expiresAt);
