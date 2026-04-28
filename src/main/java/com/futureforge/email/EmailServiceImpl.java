@@ -1,45 +1,36 @@
 package com.futureforge.email;
 
-import okhttp3.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 @Service
 public class EmailServiceImpl implements EmailService {
 
-    private static final Logger log = LoggerFactory.getLogger(EmailServiceImpl.class);
+    @Autowired
+    private JavaMailSender mailSender;
 
     @Override
     public void sendOtp(String to, String otp) {
+
+        System.out.println("Sending email to: " + to);
+
         try {
-            OkHttpClient client = new OkHttpClient();
+            SimpleMailMessage message = new SimpleMailMessage();
 
-            String json = "{"
-                    + "\"from\":\"onboarding@resend.dev\","
-                    + "\"to\":[\"" + to + "\"],"
-                    + "\"subject\":\"OTP Verification\","
-                    + "\"html\":\"<h2>Your OTP is: " + otp + "</h2>\""
-                    + "}";
+            message.setTo(to);
+            message.setFrom("Future Forge <pavanikolavennu16@gmail.com>");
+            message.setSubject("OTP Verification");
+            message.setText("Your OTP is: " + otp);
 
-            Request request = new Request.Builder()
-                    .url("https://api.resend.com/emails")
-                    .post(RequestBody.create(json, MediaType.parse("application/json")))
-                    .addHeader("Authorization", "Bearer " + System.getenv("RESEND_API_KEY"))
-                    .addHeader("Content-Type", "application/json")
-                    .build();
+            mailSender.send(message);
 
-            Response response = client.newCall(request).execute();
-
-            if (!response.isSuccessful()) {
-                log.error("Email failed: {}", response.body().string());
-                throw new RuntimeException("Email sending failed");
-            }
-
-            log.info("EMAIL SENT SUCCESSFULLY ✅");
+            System.out.println("EMAIL SENT SUCCESSFULLY ✅");
 
         } catch (Exception e) {
-            log.error("EMAIL FAILED ❌", e);
+            System.out.println("EMAIL FAILED ❌");
+            e.printStackTrace(); 
             throw new RuntimeException("Email sending failed");
         }
     }
