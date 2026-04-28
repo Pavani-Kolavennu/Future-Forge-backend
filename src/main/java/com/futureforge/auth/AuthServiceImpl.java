@@ -73,15 +73,20 @@ public class AuthServiceImpl implements AuthService {
 
 	@Override
 	public OtpSendResponseDto sendOtp(OtpRequestDto request) {
-		String email = normalizeEmail(request.email());
-		String otp = generateOtp();
-		otpStore.put(email, new OtpEntry(otp, Instant.now().plus(OTP_TTL)));
+	    String email = normalizeEmail(request.email());
+	    String otp = generateOtp();
 
-		boolean delivered = trySendOtpEmail(email, otp);
-		String message = delivered
-				? "OTP sent to email"
-				: "OTP generated. Email delivery is not available, but verification can continue in this environment.";
-		return new OtpSendResponseDto(true, message);
+	    System.out.println("Generated OTP for " + email + " = " + otp);
+
+	    otpStore.put(email, new OtpEntry(otp, Instant.now().plus(OTP_TTL)));
+
+	    boolean delivered = trySendOtpEmail(email, otp);
+
+	    String message = delivered
+	            ? "OTP sent to email"
+	            : "OTP generated. Email delivery is not available, but verification can continue in this environment.";
+
+	    return new OtpSendResponseDto(true, message);
 	}
 
 	@Override
