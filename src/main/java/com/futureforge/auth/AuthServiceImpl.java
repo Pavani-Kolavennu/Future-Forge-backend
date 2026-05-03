@@ -85,7 +85,7 @@ public class AuthServiceImpl implements AuthService {
 	        trySendOtpEmail(email, otp);
 	    }).start();
 
-	    return new OtpSendResponseDto(true, "OTP generated. Check email (if delivery works).");
+	    return new OtpSendResponseDto(true, "OTP generated. (SMTP service is not available on Railway platform currently.) Your OTP is: " + otp);
 	}
 
 	@Override
